@@ -1,7 +1,7 @@
 import os
 import click
 from flask.cli import with_appcontext
-from peewee import Model, SqliteDatabase, AutoField, CharField, DateTimeField, ForeignKeyField, FloatField, IntegerField
+from peewee import Model, SqliteDatabase, AutoField, CharField, DateTimeField, ForeignKeyField, FloatField, IntegerField, BooleanField
 
 
 def get_db_path():
@@ -14,29 +14,24 @@ class BaseModel(Model):
 
 
 class Product(BaseModel):
-    description = CharField(null=False)
-    id = AutoField(primary_key=True)
-    image = CharField(null=False)
-    quantity = IntegerField(unique=True)
-    price = FloatField()
-    in_stock = CharField(null=False)
     name = CharField(unique=True, null=False)
+    in_stock = BooleanField(null=False)
+    description = CharField(null=False)
+    price = FloatField(null=False)
+    image = CharField()
+    quantity = IntegerField()
+    weight = FloatField()
 
 
-class Order(BaseModel):
-    id = AutoField(primary_key=True)
-    total_price = FloatField()
-    email = CharField(null=False)
-    credit_card = IntegerField()
-    paid = CharField(null=False)
-    transaction = CharField(null=False)
-    products = ForeignKeyField(Products, backref="choices")
-    quantity = ForeignKeyField(Products.quantity)
-    shiping_price = FloatField()
-    image = CharField(null=False)
+class CreditCard(BaseModel):
+    name = CharField(null=False)
+    first_digits = CharField(unique=True, null=False)
+    last_digits = CharField(unique=True, null=False)
+    expiration_year = IntegerField(null=False)
+    expiration_month = IntegerField(null=False)
+    
 
-
-class Shipping_Information(BaseModel):
+class ShippingInformation(BaseModel):
     country = CharField(null=False)
     address = CharField(null=False)
     postal_code = CharField(null=False)
@@ -44,41 +39,28 @@ class Shipping_Information(BaseModel):
     province = CharField(null=False)
 
 
-#class Poll(BaseModel):
-#   id = AutoField(primary_key=True)
-#   name = CharField(null=False)
-#    date = DateTimeField()
-
-#    def number_of_votes(self):
-#        return self.vote_casts.count()
-
-#    def __str__(self):
-#        return self.name
+class Transaction(BaseModel):
+    id = CharField(primary_key=True, null=False)
+    success = BooleanField(null=False)
+    amount_charged = IntegerField(null=False)
 
 
-#class Choice(BaseModel):
-#    id = AutoField(primary_key=True)
-#    choice = CharField(null=False)
-#    poll = ForeignKeyField(Poll, backref="choices")
-
-#    def number_of_votes(self):
-#        return self.vote_casts.count()
-
-#    def __str__(self):
-#        return self.choice
-
-
-class VoteCast(BaseModel):
-    id = AutoField(primary_key=True)
-    poll = ForeignKeyField(Poll, backref="vote_casts")
-    choice = ForeignKeyField(Choice, backref="vote_casts")
+class Order(BaseModel):
+    total_price = FloatField()
+    email = CharField(null=False)
+    credit_card = ForeignKeyField(CreditCard, backref="orders")
+    shipping_information = ForeignKeyField(ShippingInformation, backref="orders")
+    paid = BooleanField(null=False)
+    transaction = ForeignKeyField(Transaction, backref="orders")
+    product = ForeignKeyField(Product, backref="orders")
+    shipping_price = IntegerField(null=False)
 
 
 @click.command("init-db")
 @with_appcontext
 def init_db_command():
     database = SqliteDatabase(get_db_path())
-    database.create_tables([Products, Order, Shipping_Information])
+    database.create_tables([Product, CreditCard, ShippingInformation, Transaction, Order])
     click.echo("Initialized the database.")
 
 
