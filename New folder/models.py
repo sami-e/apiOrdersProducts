@@ -1,7 +1,9 @@
 import os
 import click
+
 from flask.cli import with_appcontext
 from peewee import Model, SqliteDatabase, CharField, ForeignKeyField, FloatField, IntegerField, BooleanField
+from .services import perform_request
 
 
 def get_db_path():
@@ -14,12 +16,12 @@ class BaseModel(Model):
 
 
 class Product(BaseModel):
+    id = IntegerField(null=False)
     name = CharField(unique=True, null=False)
-    in_stock = BooleanField(null=False)
+    in_stock = CharField(null=False)
     description = CharField(null=False)
     price = FloatField(null=False)
     image = CharField()
-    quantity = IntegerField()
     weight = FloatField()
 
 
@@ -29,7 +31,7 @@ class CreditCard(BaseModel):
     last_digits = CharField(unique=True, null=False)
     expiration_year = IntegerField(null=False)
     expiration_month = IntegerField(null=False)
-    
+
 
 class ShippingInformation(BaseModel):
     country = CharField(null=False)
@@ -56,11 +58,39 @@ class Order(BaseModel):
     shipping_price = IntegerField(null=False)
 
 
+class Prods(object):
+    @classmethod
+    def get_product_by_id(cls, yt):
+        db = SqliteDatabase(get_db_path())
+        raw_product = db.execute("SELECT id, name FROM Product WHERE id = ?", [yt]).fetchone()
+
+        if raw_product:
+            return cls(
+                id=raw_product[0],
+                name=raw_product[1],
+            )
+
+        return None
+
+
+def kkj():
+    data = perform_request('products')
+    database = SqliteDatabase(get_db_path(), timeout=15)
+    for products in data['products']:
+        database.execute(
+            "INSERT INTO Product ('id' ,'name' , 'in_stock','description', 'price', 'image', 'weight' ) VALUES",
+            [products['id'], products['name'], products['in_stock'], products['description'],
+             products['price'], products['image'], products['weight']])
+
+    database.commit()
+
+
 @click.command("init-db")
 @with_appcontext
 def init_db_command():
-    database = SqliteDatabase(get_db_path())
+    database = SqliteDatabase(get_db_path(), timeout=15)
     database.create_tables([Product, CreditCard, ShippingInformation, Transaction, Order])
+
     click.echo("Initialized the database.")
 
 
