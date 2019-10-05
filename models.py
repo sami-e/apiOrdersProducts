@@ -1,11 +1,11 @@
 import os
 import click
 from flask.cli import with_appcontext
-from peewee import Model, SqliteDatabase, AutoField, CharField, DateTimeField, ForeignKeyField, FloatField, IntegerField, BooleanField
+from peewee import Model, SqliteDatabase, CharField, ForeignKeyField, FloatField, IntegerField, BooleanField
 
 
 def get_db_path():
-    return os.environ.get('DATABASE', './db.sqlite')
+    return os.environ.get('DATABASE', './inf5190/db.sqlite')
 
 
 class BaseModel(Model):
