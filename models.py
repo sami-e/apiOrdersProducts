@@ -1,6 +1,6 @@
 import os
-import click, json
-from urllib.request import urlopen
+import click
+from inf5190 import services
 from flask.cli import with_appcontext
 from peewee import Model, SqliteDatabase, CharField, ForeignKeyField, FloatField, IntegerField, BooleanField
 
@@ -62,11 +62,10 @@ class Order(BaseModel):
 def init_db_command():
     database = SqliteDatabase(get_db_path())
     database.create_tables([Product, CreditCard, ShippingInformation, Transaction, Order])
-    with urlopen("https://caissy.dev/shops/products") as response:
-        data = json.loads(response.read())
-        for product in data["products"]:
-            Product.create(name=product["name"], image=product["image"], description=product["description"],
-                           price=product["price"], in_stock=product["in_stock"], weight=product["weight"])
+    data = services.perform_request("products")
+    for product in data["products"]:
+        Product.create(name=product["name"], image=product["image"], description=product["description"],
+                       price=product["price"], in_stock=product["in_stock"], weight=product["weight"])
     click.echo("Initialized the database.")
 
 
