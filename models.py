@@ -20,7 +20,6 @@ class Product(BaseModel):
     description = CharField()
     price = FloatField()
     image = CharField(null=True)
-    quantity = IntegerField(null=True)
     weight = FloatField(null=True)
 
 
@@ -47,13 +46,14 @@ class Transaction(BaseModel):
 
 
 class Order(BaseModel):
-    total_price = FloatField()
-    email = CharField()
-    credit_card = ForeignKeyField(CreditCard, backref="orders")
-    shipping_information = ForeignKeyField(ShippingInformation, backref="orders")
-    paid = BooleanField()
-    transaction = ForeignKeyField(Transaction, backref="orders")
     product = ForeignKeyField(Product, backref="orders")
+    quantity = IntegerField()
+    total_price = FloatField()
+    email = CharField(null=True)
+    credit_card = ForeignKeyField(CreditCard, backref="orders", null=True)
+    shipping_information = ForeignKeyField(ShippingInformation, backref="orders", null=True)
+    paid = BooleanField(null=True)
+    transaction = ForeignKeyField(Transaction, backref="orders", null=True)
     shipping_price = IntegerField()
 
 
