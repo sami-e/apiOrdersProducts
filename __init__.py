@@ -1,8 +1,7 @@
-import json
 from flask import Flask, abort
-from inf5190 import models
-from inf5190 import views
-from inf5190 import services
+# from inf5190 import views
+# from inf5190 import services
+from .models import init_app
 
 
 def create_app(initial_config=None):
