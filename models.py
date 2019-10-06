@@ -1,5 +1,6 @@
 import os
-import click
+import click, json
+from urllib.request import urlopen
 from flask.cli import with_appcontext
 from peewee import Model, SqliteDatabase, CharField, ForeignKeyField, FloatField, IntegerField, BooleanField
 
@@ -14,46 +15,46 @@ class BaseModel(Model):
 
 
 class Product(BaseModel):
-    name = CharField(unique=True, null=False)
-    in_stock = BooleanField(null=False)
-    description = CharField(null=False)
-    price = FloatField(null=False)
-    image = CharField()
-    quantity = IntegerField()
-    weight = FloatField()
+    name = CharField()
+    in_stock = BooleanField()
+    description = CharField()
+    price = FloatField()
+    image = CharField(null=True)
+    quantity = IntegerField(null=True)
+    weight = FloatField(null=True)
 
 
 class CreditCard(BaseModel):
-    name = CharField(null=False)
-    first_digits = CharField(unique=True, null=False)
-    last_digits = CharField(unique=True, null=False)
-    expiration_year = IntegerField(null=False)
-    expiration_month = IntegerField(null=False)
-    
+    name = CharField()
+    first_digits = CharField()
+    last_digits = CharField()
+    expiration_year = IntegerField()
+    expiration_month = IntegerField()
+
 
 class ShippingInformation(BaseModel):
-    country = CharField(null=False)
-    address = CharField(null=False)
-    postal_code = CharField(null=False)
-    city = CharField(null=False)
-    province = CharField(null=False)
+    country = CharField()
+    address = CharField()
+    postal_code = CharField()
+    city = CharField()
+    province = CharField(null=True)
 
 
 class Transaction(BaseModel):
-    id = CharField(primary_key=True, null=False)
-    success = BooleanField(null=False)
-    amount_charged = IntegerField(null=False)
+    id = CharField(primary_key=True)
+    success = BooleanField()
+    amount_charged = IntegerField()
 
 
 class Order(BaseModel):
     total_price = FloatField()
-    email = CharField(null=False)
+    email = CharField()
     credit_card = ForeignKeyField(CreditCard, backref="orders")
     shipping_information = ForeignKeyField(ShippingInformation, backref="orders")
-    paid = BooleanField(null=False)
+    paid = BooleanField()
     transaction = ForeignKeyField(Transaction, backref="orders")
     product = ForeignKeyField(Product, backref="orders")
-    shipping_price = IntegerField(null=False)
+    shipping_price = IntegerField()
 
 
 @click.command("init-db")
@@ -61,6 +62,11 @@ class Order(BaseModel):
 def init_db_command():
     database = SqliteDatabase(get_db_path())
     database.create_tables([Product, CreditCard, ShippingInformation, Transaction, Order])
+    with urlopen("https://caissy.dev/shops/products") as response:
+        data = json.loads(response.read())
+        for product in data["products"]:
+            Product.create(name=product["name"], image=product["image"], description=product["description"],
+                           price=product["price"], in_stock=product["in_stock"], weight=product["weight"])
     click.echo("Initialized the database.")
 
 
