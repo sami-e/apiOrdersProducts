@@ -54,7 +54,7 @@ def init_db_command():
     database.create_tables([Product, CreditCard, ShippingInformation, Transaction, Order])
     data = perform_request("products")
     for product in data["products"]:
-        Product.create(name=product["name"], image=product["image"], description=product["description"],
+        Product.create(id=product["id"], name=product["name"], image=product["image"], description=product["description"],
                        price=product["price"], in_stock=product["in_stock"], weight=product["weight"])
     click.echo("Initialized the database.")
 

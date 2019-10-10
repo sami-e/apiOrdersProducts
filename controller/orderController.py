@@ -24,21 +24,12 @@ class OrderController:
     @classmethod
     def new_order(cls, post_data):
         if "product" in post_data and "id" in post_data["product"] and "quantity" in post_data["product"] \
-                and post_data["product"] and post_data["product"]["id"] and post_data["product"]["quantity"] \
+                and isinstance(post_data["product"]["id"], int) and isinstance(post_data["product"]["quantity"], int) \
                 and post_data["product"]["quantity"] > 0:
             
             product_id = post_data["product"]["id"]
             quantity = post_data["product"]["quantity"]
             product = Product.get_or_none(Product.id == product_id)
-            price = product.price
-            weight = product.weight
-            total_price = price * quantity
-            if weight < 500.0:
-                shipping_price = 5
-            elif weight < 2000.0:
-                shipping_price = 10
-            else:
-                shipping_price = 25
             
             if not product or not product.in_stock:
                 error_stock = {
@@ -51,6 +42,16 @@ class OrderController:
                 }
                 return Response(response=jsonify(error_stock), status=422,
                                 headers={"Content-Type": "application/json; charset=utf-8"})
+            
+            price = product.price
+            weight = product.weight
+            total_price = price * quantity
+            if weight < 500.0:
+                shipping_price = 5
+            elif weight < 2000.0:
+                shipping_price = 10
+            else:
+                shipping_price = 25
             
             order = Order.create(product_id=product_id, quantity=quantity, total_price=total_price,
                                  shipping_price=shipping_price, paid=False)
