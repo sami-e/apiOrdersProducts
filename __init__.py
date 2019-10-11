@@ -26,8 +26,11 @@ def create_app(initial_config=None):
         return order.response, order.status, order.headers
 
     @app.route("/order/<int:order_id>", methods=["PUT"])
-    def put_order(order_id):
-        order = OrderController.UpDateOrder(request.json, order_id)
-        return order.response, order.status, order.headers
+    def put_shipping_info(order_id):
+        order = OrderController.update_shipping_info(request.json, order_id)
+        if order.status == "422 UNPROCESSABLE ENTITY":
+            return order.response, order.status, order.headers
+        shipping_order = OrderController.formatted_order(order_id)
+        return shipping_order.response, shipping_order.status, shipping_order.headers
 
     return app
