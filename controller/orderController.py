@@ -12,6 +12,61 @@ def posteInfo_Creditcards(cls, post_data):
     return data_credit_card.response, data_credit_card.status, data_credit_card.headers
 
 
+def upd_creditcarte_info(cls, post_data, order_id):
+    if Order.paid == "true":
+        error_missing = {
+            "errors": {
+                "order": {
+                    "code": "already-paid",
+                    "name": "La commande a déjà été payée."
+                }
+            }
+        }
+        return Response(response=jsonify(error_missing), status=422,
+                        headers={"Content-Type": "application/json; charset=utf-8"})
+
+    if "credit_card" in post_data and "name" in post_data["credit_card"] and "first_digits" in post_data[
+        "credit_card"] \
+            and "last_digits" in post_data["credit_card"] and "expiration_year" in post_data["credit_card"] \
+            and "expiration_month" in post_data["credit_card"] and (
+            Order.email.where(Order.id == order_id)) != "":
+        name = post_data["credit_card"]["name"]
+        first_digits = post_data["credit_card"]["first_digits"]
+        last_digits = post_data["credit_card"]["last_digits"]
+        expiration_year = post_data["credit_card"]["expiration_year"]
+        expiration_month = post_data["credit_card"]["expiration_month"]
+        answer_url = posteInfo_Creditcards(cls, post_data)
+        if answer_url:
+            CreditCard.create(name=name, first_digits=first_digits, last_digits=last_digits,
+                              expiration_year=expiration_year,
+                              expiration_month=expiration_month)
+            return Response(status=200)
+
+        else:
+            error_missing = {
+                "errors": {
+                    "credit_card": {
+                        "code": "card-declined",
+                        "name": "La carte de crédit a été déclinée"
+                    }
+                }
+            }
+        return Response(response=jsonify(error_missing), status=422,
+                        headers={"Content-Type": "application/json; charset=utf-8"})
+
+    else:
+        error_missing = {
+            "errors": {
+                "order": {
+                    "code": "missing-fields",
+                    "name": "Les informations du client sont nécessaire avant d'appliquer une carte de crédit"
+                }
+            }
+        }
+        return Response(response=jsonify(error_missing), status=422,
+                        headers={"Content-Type": "application/json; charset=utf-8"})
+
+
 class OrderController:
     @classmethod
     def formatted_order(cls, order_id):
@@ -92,90 +147,39 @@ class OrderController:
 
     @classmethod
     def update_shipping_info(cls, post_data, order_id):
-
-        if "order" in post_data and "email" in post_data["order"] and "shipping_information" in post_data["order"] \
-                and "country" in post_data["order"]["shipping_information"] \
-                and "address" in post_data["order"]["shipping_information"] \
-                and "postal_code" in post_data["order"]["shipping_information"] \
-                and "city" in post_data["order"]["shipping_information"] \
-                and "province" in post_data["order"]["shipping_information"]:
-
-            email = post_data["order"]["email"]
-            country = post_data["order"]["shipping_information"]["country"]
-            address = post_data["order"]["shipping_information"]["address"]
-            postal_code = post_data["order"]["shipping_information"]["postal_code"]
-            city = post_data["order"]["shipping_information"]["city"]
-            province = post_data["order"]["shipping_information"]["province"]
-
-            shipping_information = ShippingInformation.create(country=country, address=address, postal_code=postal_code,
-                                                              city=city, province=province)
-            Order.update(email=email,
-                         shipping_information=shipping_information.id).where(Order.id == order_id).execute()
-            return Response(status=200)
-
+        email_test = Order.get_or_none(Order.email)
+        if email_test:
+            upd_creditcarte_info(cls, post_data, order_id)
         else:
-            error_missing = {
-                "errors": {
-                    "order": {
-                        "code": "missing-fields",
-                        "name": "Il manque un ou plusieurs champs qui sont obligatoire"
-                    }
-                }
-            }
-            return Response(response=jsonify(error_missing), status=422,
-                            headers={"Content-Type": "application/json; charset=utf-8"})
-
-    @classmethod
-    def update_creditcarte_info(cls, post_data, order_id):
-        if Order.paid == "true":
-            error_missing = {
-                "errors": {
-                    "order": {
-                        "code": "already-paid",
-                        "name": "La commande a déjà été payée."
-                    }
-                }
-            }
-            return Response(response=jsonify(error_missing), status=422,
-                            headers={"Content-Type": "application/json; charset=utf-8"})
-
-        if "credit_card" in post_data and "name" in post_data["credit_card"] and "first_digits" in post_data[
-            "credit_card"] \
-                and "last_digits" in post_data["credit_card"] and "expiration_year" in post_data["credit_card"] \
-                and "expiration_month" in post_data["credit_card"] and (
-                Order.email.where(Order.id == order_id)) != "":
-            name = post_data["credit_card"]["name"]
-            first_digits = post_data["credit_card"]["first_digits"]
-            last_digits = post_data["credit_card"]["last_digits"]
-            expiration_year = post_data["credit_card"]["expiration_year"]
-            expiration_month = post_data["credit_card"]["expiration_month"]
-            answer_url = posteInfo_Creditcards(cls, post_data)
-            if answer_url:
-                CreditCard.create(name=name, first_digits=first_digits, last_digits=last_digits,
-                                  expiration_year=expiration_year,
-                                  expiration_month=expiration_month)
+            if "order" in post_data and "email" in post_data["order"] and "shipping_information" in post_data["order"] \
+                    and "country" in post_data["order"]["shipping_information"] \
+                    and "address" in post_data["order"]["shipping_information"] \
+                    and "postal_code" in post_data["order"]["shipping_information"] \
+                    and "city" in post_data["order"]["shipping_information"] \
+                    and "province" in post_data["order"]["shipping_information"]:
+                email = post_data["order"]["email"]
+                country = post_data["order"]["shipping_information"]["country"]
+                address = post_data["order"]["shipping_information"]["address"]
+                postal_code = post_data["order"]["shipping_information"]["postal_code"]
+                city = post_data["order"]["shipping_information"]["city"]
+                province = post_data["order"]["shipping_information"]["province"]
+                shipping_information = ShippingInformation.create(country=country, address=address,
+                                                                  postal_code=postal_code,
+                                                                  city=city, province=province)
+                Order.update(email=email,
+                             shipping_information=shipping_information.id).where(Order.id == order_id).execute()
                 return Response(status=200)
 
             else:
                 error_missing = {
                     "errors": {
-                        "credit_card": {
-                            "code": "card-declined",
-                            "name": "La carte de crédit a été déclinée"
+                        "order": {
+                            "code": "missing-fields",
+                            "name": "Il manque un ou plusieurs champs qui sont obligatoire"
                         }
                     }
                 }
-            return Response(response=jsonify(error_missing), status=422,
-                            headers={"Content-Type": "application/json; charset=utf-8"})
+                return Response(response=jsonify(error_missing), status=422,
+                                headers={"Content-Type": "application/json; charset=utf-8"})
 
-        else:
-            error_missing = {
-                "errors": {
-                    "order": {
-                        "code": "missing-fields",
-                        "name": "Les informations du client sont nécessaire avant d'appliquer une carte de crédit"
-                    }
-                }
-            }
-            return Response(response=jsonify(error_missing), status=422,
-                            headers={"Content-Type": "application/json; charset=utf-8"})
+
