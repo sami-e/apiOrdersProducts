@@ -1,7 +1,15 @@
-from flask import abort, Response, jsonify
+from flask import abort, Response, jsonify, request
 from inf5190.model.productModel import Product
 from inf5190.model.orderModel import Order
 from inf5190.model.shippingInfoModel import ShippingInformation
+
+from inf5190.model.creditCardModel import CreditCard
+
+
+def posteInfo_Creditcards(cls, post_data):
+    url_CreditCard = "https://caissy.dev/shops/pay"
+    data_credit_card = request.post(url=url_CreditCard, data=post_data)
+    return data_credit_card.response, data_credit_card.status, data_credit_card.headers
 
 
 class OrderController:
@@ -14,7 +22,7 @@ class OrderController:
         product = {"id": order.product.id, "quantity": order.quantity}
         credit_card = {}
         transaction = {}
-        
+
         if not order.shipping_information:
             shipping_information = {}
         else:
@@ -24,8 +32,8 @@ class OrderController:
                 "postal_code": order.shipping_information.postal_code,
                 "city": order.shipping_information.city,
                 "province": order.shipping_information.province
-             }
-        
+            }
+
         order_dict = {"id": order.id, "total_price": order.total_price, "email": order.email,
                       "credit_card": credit_card, "shipping_information": shipping_information,
                       "paid": paid, "transaction": transaction, "product": product,
@@ -91,7 +99,7 @@ class OrderController:
                 and "postal_code" in post_data["order"]["shipping_information"] \
                 and "city" in post_data["order"]["shipping_information"] \
                 and "province" in post_data["order"]["shipping_information"]:
-            
+
             email = post_data["order"]["email"]
             country = post_data["order"]["shipping_information"]["country"]
             address = post_data["order"]["shipping_information"]["address"]
@@ -111,6 +119,61 @@ class OrderController:
                     "order": {
                         "code": "missing-fields",
                         "name": "Il manque un ou plusieurs champs qui sont obligatoire"
+                    }
+                }
+            }
+            return Response(response=jsonify(error_missing), status=422,
+                            headers={"Content-Type": "application/json; charset=utf-8"})
+
+    @classmethod
+    def update_creditcarte_info(cls, post_data, order_id):
+        if Order.paid == "true":
+            error_missing = {
+                "errors": {
+                    "order": {
+                        "code": "already-paid",
+                        "name": "La commande a déjà été payée."
+                    }
+                }
+            }
+            return Response(response=jsonify(error_missing), status=422,
+                            headers={"Content-Type": "application/json; charset=utf-8"})
+
+        if "credit_card" in post_data and "name" in post_data["credit_card"] and "first_digits" in post_data[
+            "credit_card"] \
+                and "last_digits" in post_data["credit_card"] and "expiration_year" in post_data["credit_card"] \
+                and "expiration_month" in post_data["credit_card"] and (
+                Order.email.where(Order.id == order_id)) != "":
+            name = post_data["credit_card"]["name"]
+            first_digits = post_data["credit_card"]["first_digits"]
+            last_digits = post_data["credit_card"]["last_digits"]
+            expiration_year = post_data["credit_card"]["expiration_year"]
+            expiration_month = post_data["credit_card"]["expiration_month"]
+            answer_url = posteInfo_Creditcards(cls, post_data)
+            if answer_url:
+                CreditCard.create(name=name, first_digits=first_digits, last_digits=last_digits,
+                                  expiration_year=expiration_year,
+                                  expiration_month=expiration_month)
+                return Response(status=200)
+
+            else:
+                error_missing = {
+                    "errors": {
+                        "credit_card": {
+                            "code": "card-declined",
+                            "name": "La carte de crédit a été déclinée"
+                        }
+                    }
+                }
+            return Response(response=jsonify(error_missing), status=422,
+                            headers={"Content-Type": "application/json; charset=utf-8"})
+
+        else:
+            error_missing = {
+                "errors": {
+                    "order": {
+                        "code": "missing-fields",
+                        "name": "Les informations du client sont nécessaire avant d'appliquer une carte de crédit"
                     }
                 }
             }

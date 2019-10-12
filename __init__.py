@@ -34,6 +34,14 @@ def create_app(initial_config=None):
         shipping_order = OrderController.formatted_order(order_id)
         return shipping_order.response, shipping_order.status, shipping_order.headers
 
+    @app.route("/order/<int:order_id>", methods=["PUT"])
+    def put_CreditCarte_info(order_id):
+        order = OrderController.update_creditcarte_info(request.json, order_id)
+        if order.status == "422 UNPROCESSABLE ENTITY":
+            return order.response, order.status, order.headers
+        CreditCarte_order = OrderController.formatted_order(order_id)
+        return CreditCarte_order.response, CreditCarte_order.status, CreditCarte_order.headers
+
     @app.before_first_request
     def init_products_list():
         data = perform_request("products")
