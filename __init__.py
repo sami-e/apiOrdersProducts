@@ -1,7 +1,8 @@
 from flask import Flask, redirect, url_for, request
 from inf5190.controller.orderController import OrderController
 from inf5190.controller.productController import ProductController
-from inf5190.services import init_app
+from inf5190.model.productModel import Product
+from inf5190.services import init_app, perform_request
 
 
 def create_app(initial_config=None):
@@ -32,5 +33,13 @@ def create_app(initial_config=None):
             return order.response, order.status, order.headers
         shipping_order = OrderController.formatted_order(order_id)
         return shipping_order.response, shipping_order.status, shipping_order.headers
+
+    @app.before_first_request
+    def init_products_list():
+        data = perform_request("products")
+        for product in data["products"]:
+            Product.create(id=product["id"], name=product["name"], image=product["image"],
+                           description=product["description"],
+                           price=product["price"], in_stock=product["in_stock"], weight=product["weight"])
 
     return app
