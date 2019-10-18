@@ -155,7 +155,7 @@ class OrderController:
             return Response(response=jsonify(error_already_paid), status=422,
                             headers={"Content-Type": "application/json; charset=utf-8"})
         
-        if "credit_card" in post_data  and "name" in post_data["credit_card"] and "number" in post_data["credit_card"] \
+        if "credit_card" in post_data and "name" in post_data["credit_card"] and "number" in post_data["credit_card"] \
                 and "expiration_year" in post_data["credit_card"] and "cvv" in post_data["credit_card"] \
                 and "expiration_month" in post_data["credit_card"]:
             name = post_data["credit_card"]["name"]

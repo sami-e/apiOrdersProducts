@@ -1,6 +1,5 @@
 import json
 from urllib.error import HTTPError
-from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 import click
@@ -24,10 +23,8 @@ def perform_request(uri, method="GET", data=None):
     request = Request(f"{BASE_URL}/{uri}")
     request.method = method
     request.add_header("content-type", "application/json")
-
     if data:
         request.data = json.dumps(data).encode('utf-8')
-
     try:
         with urlopen(request) as response:
             data = response.read()
@@ -37,7 +34,6 @@ def perform_request(uri, method="GET", data=None):
                 return json.loads(data), code
             else:
                 return None
-
     except HTTPError as e:
         code = e.code
         headers = e.headers
@@ -47,13 +43,6 @@ def perform_request(uri, method="GET", data=None):
         if headers["content-type"] == "application/json":
             error.content = json.loads(data)
         raise error
-
-
-@staticmethod
-def performe_pos(url, post_fields):
-    request = Request(url, urlencode(post_fields).encode())
-    json = urlopen(request).read().decode()
-    return (json)
 
 
 @click.command("init-db")
