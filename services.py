@@ -28,10 +28,9 @@ def perform_request(uri, method="GET", data=None):
     try:
         with urlopen(request) as response:
             data = response.read()
-            code = response.status
             headers = response.headers
             if headers["content-type"] == "application/json":
-                return json.loads(data), code
+                return json.loads(data)
             else:
                 return None
     except HTTPError as e:

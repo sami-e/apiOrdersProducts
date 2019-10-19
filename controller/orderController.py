@@ -173,7 +173,7 @@ class OrderController:
                                 },
                             "amount_charged": order.total_price+order.shipping_price}
             try:
-                payment_response = perform_request(uri="pay", method="POST", data=payment_data)[0]
+                payment_response = perform_request(uri="pay", method="POST", data=payment_data)
             except ApiError as e:
                 return Response(response=e.content, status=e.code,
                                 headers={"Content-Type": "application/json; charset=utf-8"})

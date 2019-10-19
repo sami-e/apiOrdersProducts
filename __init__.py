@@ -11,7 +11,7 @@ def create_app(initial_config=None):
 
     @app.before_first_request
     def init_products_list():
-        data = perform_request("products")[0]
+        data = perform_request("products")
         for product in data["products"]:
             Product.create(id=product["id"], name=product["name"], image=product["image"],
                            description=product["description"],
