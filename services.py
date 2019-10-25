@@ -18,7 +18,6 @@ BASE_URL = "https://caissy.dev/shops"
 class ApiError(Exception):
     pass
 
-
 def perform_request(uri, method="GET", data=None):
     request = Request(f"{BASE_URL}/{uri}")
     request.method = method
