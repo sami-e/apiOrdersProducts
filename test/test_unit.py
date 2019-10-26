@@ -1,12 +1,12 @@
 import json
-from flask import Request, json
+from flask import json
 from inf5190.services import perform_request
 
 
-class TestApiError(object):
+class TestExternalApi(object):
     def test_perform_request(self):
-        reponse_data = perform_request("products")
-        data_str = json.dumps(reponse_data)
+        response_data = perform_request("products")
+        data_str = json.dumps(response_data)
         assert data_str is not None
         assert "1248" in data_str
         assert "1232" in data_str
