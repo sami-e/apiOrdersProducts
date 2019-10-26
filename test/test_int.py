@@ -32,3 +32,42 @@
 #
 #         response = client.get("/new")
 #         assert response.status_code == 200
+
+import pytest
+
+order_post = {
+    "product": {
+        "id": 1245,
+        "quantity": 2
+    }
+}
+
+
+class TestPoll(object):
+    def test_create_Order(self, app, client):
+        with app.app_context():
+            response = client.get("/")
+            assert response.status_code == 200
+            assert b"1245" in response.data
+            assert b"1248" in response.data
+            assert b"1232" in response.data
+            assert b"1235" in response.data
+            assert b"1245" in response.data
+            assert b"1231" in response.data
+
+            response = client.post("/order", json=order_post)
+            assert response.status_code == 302
+            assert response.location == "http://localhost/order/1"
+
+            response = client.get("/order/1")
+            assert response.status_code == 200
+            assert b"1245" in response.data
+
+            #
+            # response = client.post("/polls/new", data={"name": "Mon premier sondage"})
+            # assert response.status_code == 302
+            # assert response.location == "http://localhost/polls/1"
+            #
+            # response = client.get("/polls/1")
+            # assert response.status_code == 200
+            # assert b'Mon premier sondage' in response.data

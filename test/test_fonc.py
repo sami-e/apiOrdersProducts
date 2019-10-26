@@ -35,6 +35,7 @@ credit_card_f = {
     }
 }
 
+
 class TestApp(object):
 
     def test_index(self, app, client):
@@ -97,4 +98,3 @@ class TestApp(object):
             assert response_shipping.status_code == 200
             assert response_credit.status_code == 422
             assert b"card-declined" in response_credit.data
-
