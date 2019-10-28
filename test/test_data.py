@@ -1,13 +1,32 @@
-order_post = {
+order = {
     "product": {
         "id": 1245,
         "quantity": 2
     }
 }
 
+order_false = {
+    "product": {
+        "id": 9999,
+        "quantity": 1
+    }
+}
+
 shipping_info = {
     "order": {
         "email": "caissy.jean-philippe@uqam.ca",
+        "shipping_information": {
+            "country": "Canada",
+            "address": "201, rue Président-Kennedy",
+            "postal_code": "H2X 3Y7",
+            "city": "Montréal",
+            "province": "QC"
+        }
+    }
+}
+
+shipping_info_false = {
+    "order": {
         "shipping_information": {
             "country": "Canada",
             "address": "201, rue Président-Kennedy",
