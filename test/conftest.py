@@ -2,7 +2,7 @@ import os
 import pytest
 from peewee import SqliteDatabase
 from inf5190 import create_app
-from inf5190.services import get_db_path, init_db_command
+from inf5190.model.models import get_db_path
 from inf5190.model.creditCardModel import CreditCard
 from inf5190.model.orderModel import Order
 from inf5190.model.productModel import Product
@@ -22,8 +22,8 @@ def app():
     yield app
 
     database.drop_tables([Product, CreditCard, ShippingInformation, Transaction, Order])
-
-
+    
+    
 @pytest.fixture
 def client(app):
     return app.test_client()

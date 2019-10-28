@@ -6,7 +6,7 @@ from inf5190.services import init_app, perform_request
 
 
 def create_app(initial_config=None):
-    app = Flask("inf5190")
+    app = Flask("__name__")
     init_app(app)
 
     @app.before_first_request

@@ -47,7 +47,7 @@ def perform_request(uri, method="GET", data=None):
 @click.command("init-db")
 @with_appcontext
 def init_db_command():
-    database = SqliteDatabase(get_db_path())
+    database = SqliteDatabase(get_db_path)
     database.create_tables([Product, CreditCard, ShippingInformation, Transaction, Order])
     click.echo("Initialized the database.")
 

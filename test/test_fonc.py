@@ -36,19 +36,13 @@ credit_card_f = {
 }
 
 
-class TestApp(object):
+class TestRoutes(object):
 
     def test_index(self, app, client):
         with app.app_context():
             response = client.get("/")
             assert response.status_code == 200
             assert b"1245" in response.data
-
-    def test_index_false(self, app, client):
-        with app.app_context():
-            response = client.get("/")
-            assert response.status_code == 200
-            assert b"12455" not in response.data
 
     def test_post_redirect_get_order(self, app, client):
         with app.app_context():
