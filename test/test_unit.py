@@ -4,6 +4,7 @@ from inf5190.services import perform_request
 
 
 class TestExternalApi(object):
+    
     def test_perform_request(self):
         response_data = perform_request("products")
         data_str = json.dumps(response_data)

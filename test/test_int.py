@@ -1,30 +1,4 @@
-order_post = {
-    "product": {
-        "id": 1245,
-        "quantity": 2
-    }
-}
-shipping_info = {
-    "order": {
-        "email": "caissy.jean-philippe@uqam.ca",
-        "shipping_information": {
-            "country": "Canada",
-            "address": "201, rue Président-Kennedy",
-            "postal_code": "H2X 3Y7",
-            "city": "Montréal",
-            "province": "QC"
-        }
-    }
-}
-credit_card = {
-    "credit_card": {
-        "name": "John Doe",
-        "number": "4242 4242 4242 4242",
-        "expiration_year": 2024,
-        "cvv": "123",
-        "expiration_month": 9
-    }
-}
+from inf5190.test.test_data import order_post, shipping_info, credit_card
 
 
 class TestApp(object):
@@ -54,3 +28,4 @@ class TestApp(object):
             response = client.put("/order/1", json=credit_card)
             assert response.status_code == 200
             assert b"success" in response.data
+            assert b"true" in response.data
