@@ -1,4 +1,5 @@
 import os
+os.environ['DATABASE'] = ":memory:"
 import pytest
 from peewee import SqliteDatabase
 from inf5190 import create_app
@@ -8,8 +9,6 @@ from inf5190.model.orderModel import Order
 from inf5190.model.productModel import Product
 from inf5190.model.shippingInfoModel import ShippingInformation
 from inf5190.model.transactionModel import Transaction
-
-os.environ['DATABASE'] = ":memory:"
 
 
 @pytest.fixture
