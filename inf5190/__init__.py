@@ -25,7 +25,7 @@ def create_app(initial_config=None):
     @app.route("/order", methods=["POST"])
     def post_order():
         order = OrderController.create_order(request.json)
-        if order.status == "422 UNPROCESSABLE ENTITY":
+        if order.status_code == 422:
             return order.response, order.status, order.headers
         return redirect(url_for("get_order", order_id=order.response)), order.status
 
@@ -37,7 +37,7 @@ def create_app(initial_config=None):
     @app.route("/order/<int:order_id>", methods=["PUT"])
     def put_order(order_id):
         order = OrderController.update_order(request.json, order_id)
-        if order.status == "422 UNPROCESSABLE ENTITY":
+        if order.status_code == 422:
             return order.response, order.status, order.headers
         new_order = OrderController.formatted_order(order_id)
         return new_order.response, new_order.status, new_order.headers
