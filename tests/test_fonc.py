@@ -1,4 +1,4 @@
-from inf5190.test.test_data import order, order_false, shipping_info, credit_card
+from tests.test_data import order, order_false, shipping_info, credit_card
 
 
 class TestRoutes(object):

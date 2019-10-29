@@ -1,5 +1,4 @@
-from inf5190.test.test_data import order, shipping_info, shipping_info_false, credit_card, \
-    credit_card_false
+from tests.test_data import order, shipping_info, shipping_info_false, credit_card, credit_card_false
 
 
 class TestApp(object):
