@@ -106,7 +106,7 @@ def display_error_missing_shipping_info():
         "errors": {
             "order": {
                 "code": "missing-fields",
-                "name": "Les informations du client sont nécessaire avant d'appliquer une carte de crédit"
+                "name": "Les informations du client sont nécessaires avant d'appliquer une carte de crédit"
             }
         }
     }

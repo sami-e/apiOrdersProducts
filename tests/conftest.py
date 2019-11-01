@@ -14,9 +14,12 @@ from inf5190.model.transactionModel import Transaction
 @pytest.fixture
 def app():
     app = create_app({"TESTING": True})
-
     database = SqliteDatabase(get_db_path())
+    
     database.create_tables([Product, CreditCard, ShippingInformation, Transaction, Order])
+    Product.create(id=1245, name="Lemonade Sugar-Free", image="https://placekitten.com/700/720",
+                   description="Another freshly brewed lemonade, but without sugar",
+                   price=510.0, in_stock=True, weight=220.0)
 
     yield app
 

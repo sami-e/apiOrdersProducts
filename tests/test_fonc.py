@@ -9,11 +9,9 @@ class TestRoutes(object):
         response_data = perform_request("products")
         data_str = json.dumps(response_data)
         assert data_str is not None
-        assert "1248" in data_str
-        assert "1232" in data_str
-        assert "1235" in data_str
-        assert "1245" in data_str
-        assert "1231" in data_str
+        assert "id" in data_str
+        assert "price" in data_str
+        assert "weight" in data_str
 
     def test_index(self, app, client):
         with app.app_context():
