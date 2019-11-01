@@ -11,11 +11,13 @@ def create_app(initial_config=None):
 
     @app.before_first_request
     def init_products_list():
-        data = perform_request("products")
-        for product in data["products"]:
-            Product.create(id=product["id"], name=product["name"], image=product["image"],
-                           description=product["description"],
-                           price=product["price"], in_stock=product["in_stock"], weight=product["weight"])
+        db_products = Product.select()
+        if not db_products:  # Prevent UNIQUE constraint error
+            data = perform_request("products")
+            for product in data["products"]:
+                Product.create(id=product["id"], name=product["name"], image=product["image"],
+                               description=product["description"],
+                               price=product["price"], in_stock=product["in_stock"], weight=product["weight"])
 
     @app.route("/", methods=["GET"])
     def index():
