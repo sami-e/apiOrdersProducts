@@ -19,4 +19,18 @@ docker volume prune
 Start
 docker-compose up -d
 FLASK_DEBUG=True FLASK_APP=inf5190 REDIS_URL=redis://localhost DB_HOST=localhost DB_USER=user DB_PASSWORD=pass DB_PORT=5432 DB_NAME=inf5190 flask init-db
+docker build -t inf5190 .
+docker run --name inf5190 -p 5000:5000 -e REDIS_URL=redis://localhost -e DB_HOST=localhost -e DB_USER=user -e DB_PASSWORD=pass -e DB_PORT=5432 -e DB_NAME=inf5190 inf5190
+
+Run on Windows or MAC: (https://docs.docker.com/docker-for-mac/networking/)
+docker run --name inf5190 -p 5000:5000 -e REDIS_URL=redis://localhost -e DB_HOST=host.docker.internal -e DB_USER=user -e DB_PASSWORD=pass -e DB_PORT=5432 -e DB_NAME=inf5190 inf5190
+
+Run local app:
 FLASK_DEBUG=True FLASK_APP=inf5190 REDIS_URL=redis://localhost DB_HOST=localhost DB_USER=user DB_PASSWORD=pass DB_PORT=5432 DB_NAME=inf5190 flask run
+
+
+Other commands:
+docker network ls
+docker network create <network-name>
+docker network inspect <network-name>
+docker run --network <network-name> ... OR docker network connect <network-name> <container-name>

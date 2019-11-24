@@ -1,0 +1,6 @@
+click
+flask
+peewee
+psycopg2-binary
+redis
+rq
