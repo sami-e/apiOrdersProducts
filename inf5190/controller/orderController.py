@@ -1,3 +1,8 @@
+import os
+import json
+
+from playhouse.shortcuts import model_to_dict, dict_to_model
+from redis import Redis
 from inf5190.services import perform_request, ApiError
 from inf5190.model.productModel import Product
 from inf5190.model.orderModel import Order
@@ -6,10 +11,19 @@ from inf5190.model.creditCardModel import CreditCard
 from inf5190.model.transactionModel import Transaction
 from inf5190.view import views
 
+redis_url = os.environ.get('REDIS_URL', 'redis://localhost')
+redis_conn = Redis.from_url(redis_url)
+
 
 class OrderController:
     @classmethod
     def formatted_order(cls, order_id):
+        cle = f"order-{order_id}"
+        order_cached = redis_conn.get(cle)
+        if order_cached:
+            order_cached = dict_to_model(Order, json.loads(order_cached))
+            return views.display_order(order_cached)
+        
         order = Order.get_or_none(Order.id == order_id)
         return views.display_order(order)
     
@@ -119,6 +133,10 @@ class OrderController:
                                              amount_charged=payment_response["transaction"]["amount_charged"])
             Order.update(credit_card=credit_card.id,
                          transaction=transaction.id, paid=True).where(Order.id == order_id).execute()
+
+            order = Order.get_or_none(Order.id == order_id)
+            order_cached = json.dumps(model_to_dict(order))
+            redis_conn.set(f"order-{order_id}", order_cached)
             return views.display_ok()
         
         else:

@@ -1,4 +1,5 @@
 import json
+import os
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
@@ -9,9 +10,10 @@ from inf5190.model.orderModel import Order
 from inf5190.model.productModel import Product
 from inf5190.model.shippingInfoModel import ShippingInformation
 from inf5190.model.transactionModel import Transaction
-from peewee import SqliteDatabase
-from inf5190.model.models import get_db_path
+from peewee import PostgresqlDatabase
+from inf5190.model.models import get_db
 
+DATABASE_NAME = os.environ.get('DB_NAME', 'inf5190')
 BASE_URL = "https://caissy.dev/shops"
 
 
@@ -47,7 +49,7 @@ def perform_request(uri, method="GET", data=None):
 @click.command("init-db")
 @with_appcontext
 def init_db_command():
-    database = SqliteDatabase(get_db_path)
+    database = PostgresqlDatabase(DATABASE_NAME, **get_db())
     database.create_tables([Product, CreditCard, ShippingInformation, Transaction, Order])
     click.echo("Initialized the database.")
 
