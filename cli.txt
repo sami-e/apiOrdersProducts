@@ -11,12 +11,11 @@ INFO keyspace (list databases with keys created)
 KEYS * (list all keys)
 
 
-Delete:
-docker container stop projet-de-session-ocean_db_1; docker container stop projet-de-session-ocean_cache_1
-docker container prune; docker volume prune
+Restart containers:
+docker container stop projet-de-session-ocean_db_1; docker container stop projet-de-session-ocean_cache_1; 
+docker container prune; docker volume prune; docker-compose up -d
 
-Start
-docker-compose up -d
+Start app:
 FLASK_DEBUG=True FLASK_APP=inf5190 REDIS_URL=redis://localhost DB_HOST=localhost DB_USER=user DB_PASSWORD=pass DB_PORT=5432 DB_NAME=inf5190 flask init-db
 docker build -t inf5190 .
 docker run --name inf5190 -p 5000:5000 -e REDIS_URL=redis://localhost -e DB_HOST=localhost -e DB_USER=user -e DB_PASSWORD=pass -e DB_PORT=5432 -e DB_NAME=inf5190 inf5190
