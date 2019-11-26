@@ -2,6 +2,7 @@ Postgres:
 docker exec -it projet-de-session-ocean_db_1 /bin/bash
 psql inf5190 user
 \dt
+SELECT * FROM productorder;
 
 Redis:
 docker exec -it projet-de-session-ocean_cache_1 /bin/bash
@@ -11,10 +12,8 @@ KEYS * (list all keys)
 
 
 Delete:
-docker container stop projet-de-session-ocean_db_1
-docker container stop projet-de-session-ocean_cache_1
-docker container prune
-docker volume prune
+docker container stop projet-de-session-ocean_db_1; docker container stop projet-de-session-ocean_cache_1
+docker container prune; docker volume prune
 
 Start
 docker-compose up -d

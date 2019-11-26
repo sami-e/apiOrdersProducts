@@ -12,7 +12,7 @@ def display_products(db_products):
                     headers={"Content-Type": "application/json; charset=utf-8"})
 
 
-def display_order(order):
+def display_order(order, product_order_list):
     if not order:
         error_not_found = {
             "errors": {
@@ -25,7 +25,6 @@ def display_order(order):
         return Response(response=jsonify(error_not_found), status=404,
                         headers={"Content-Type": "application/json; charset=utf-8"})
     
-    product = {"id": order.product.id, "quantity": order.quantity}
     if not order.shipping_information:
         shipping_information = {}
     else:
@@ -56,7 +55,7 @@ def display_order(order):
     
     order_dict = {"id": order.id, "total_price": order.total_price, "email": order.email,
                   "credit_card": credit_card, "shipping_information": shipping_information,
-                  "paid": order.paid, "transaction": transaction, "product": product,
+                  "paid": order.paid, "transaction": transaction, "products": product_order_list,
                   "shipping_price": order.shipping_price}
     return Response(response=jsonify({"order": order_dict}), status=200,
                     headers={"Content-Type": "application/json; charset=utf-8"})

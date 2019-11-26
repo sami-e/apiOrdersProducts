@@ -8,6 +8,7 @@ from flask.cli import with_appcontext
 from inf5190.model.creditCardModel import CreditCard
 from inf5190.model.orderModel import Order
 from inf5190.model.productModel import Product
+from inf5190.model.productOrderModel import ProductOrder
 from inf5190.model.shippingInfoModel import ShippingInformation
 from inf5190.model.transactionModel import Transaction
 from peewee import PostgresqlDatabase
@@ -50,7 +51,7 @@ def perform_request(uri, method="GET", data=None):
 @with_appcontext
 def init_db_command():
     database = PostgresqlDatabase(DATABASE_NAME, **get_db())
-    database.create_tables([Product, CreditCard, ShippingInformation, Transaction, Order])
+    database.create_tables([Product, CreditCard, ShippingInformation, Transaction, Order, ProductOrder])
     click.echo("Initialized the database.")
 
 

@@ -7,12 +7,10 @@ from peewee import CharField, ForeignKeyField, IntegerField, BooleanField
 
 
 class Order(models.BaseModel):
-    product = ForeignKeyField(Product, backref="orders")
-    quantity = IntegerField()
     total_price = IntegerField()
     email = CharField(null=True)
     credit_card = ForeignKeyField(CreditCard, backref="orders", null=True)
     shipping_information = ForeignKeyField(ShippingInformation, backref="orders", null=True)
-    paid = BooleanField(null=True)
+    paid = BooleanField()
     transaction = ForeignKeyField(Transaction, backref="orders", null=True)
     shipping_price = IntegerField()
