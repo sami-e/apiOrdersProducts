@@ -1,9 +1,11 @@
 import os
 import json
-
+from flask import redirect, url_for
 from playhouse.shortcuts import model_to_dict, dict_to_model
 from redis import Redis
-
+from rq import Queue, Worker
+import click
+from flask.cli import with_appcontext
 from inf5190.services import perform_request, ApiError
 from inf5190.model.productModel import Product
 from inf5190.model.orderModel import Order
@@ -15,6 +17,8 @@ from inf5190.view import views
 
 redis_url = os.environ.get('REDIS_URL', 'redis://localhost')
 redis_conn = Redis.from_url(redis_url)
+queue = Queue(connection=redis_conn)
+order_standby_list = []
 
 
 class OrderController:
@@ -106,10 +110,13 @@ class OrderController:
     
     @classmethod
     def update_order(cls, post_data, order_id):
-        if "credit_card" in post_data:
-            return cls.update_credit_card(post_data, order_id)
+        if order_id not in order_standby_list:
+            if "credit_card" in post_data:
+                return cls.update_credit_card(post_data, order_id)
+            else:
+                return cls.update_shipping_info(post_data, order_id)
         else:
-            return cls.update_shipping_info(post_data, order_id)
+            return views.display_order_standby_conflict()
     
     @staticmethod
     def update_shipping_info(post_data, order_id):
@@ -164,28 +171,47 @@ class OrderController:
                 "expiration_month": expiration_month
             },
                 "amount_charged": order.total_price + order.shipping_price}
-            
-            try:
-                payment_response = perform_request(uri="pay", method="POST", data=payment_data)
-            except ApiError as error:
-                return views.display_error_payment_api(error)
-            
-            credit_card = CreditCard.create(name=payment_response["credit_card"]["name"],
-                                            first_digits=payment_response["credit_card"]["first_digits"],
-                                            last_digits=payment_response["credit_card"]["last_digits"],
-                                            expiration_year=payment_response["credit_card"]["expiration_year"],
-                                            expiration_month=payment_response["credit_card"]["expiration_month"])
-            transaction = Transaction.create(id=payment_response["transaction"]["id"],
-                                             success=payment_response["transaction"]["success"],
-                                             amount_charged=payment_response["transaction"]["amount_charged"])
-            Order.update(credit_card=credit_card.id,
-                         transaction=transaction.id, paid=True).where(Order.id == order_id).execute()
-            
-            order = Order.get_or_none(Order.id == order_id)
-            order_cached = json.dumps(model_to_dict(order))
-            redis_conn.set(f"order-{order_id}", order_cached)
-            
-            return views.display_ok()
+
+            queue.enqueue(pay_order, order_id, payment_data)
+            return redirect(url_for('order_standby', order_id=order_id))
         
         else:
             return views.display_error_missing_fields_order()
+
+
+def pay_order(order_id, payment_data):
+    try:
+        payment_response = perform_request(uri="pay", method="POST", data=payment_data)
+    except ApiError as error:
+        return views.display_error_payment_api(error)
+
+    credit_card = CreditCard.create(name=payment_response["credit_card"]["name"],
+                                    first_digits=payment_response["credit_card"]["first_digits"],
+                                    last_digits=payment_response["credit_card"]["last_digits"],
+                                    expiration_year=payment_response["credit_card"]["expiration_year"],
+                                    expiration_month=payment_response["credit_card"]["expiration_month"])
+    transaction = Transaction.create(id=payment_response["transaction"]["id"],
+                                     success=payment_response["transaction"]["success"],
+                                     amount_charged=payment_response["transaction"]["amount_charged"])
+    Order.update(credit_card=credit_card.id,
+                 transaction=transaction.id, paid=True).where(Order.id == order_id).execute()
+
+    order = Order.get_or_none(Order.id == order_id)
+    order_cached = json.dumps(model_to_dict(order))
+    redis_conn.set(f"order-{order_id}", order_cached)
+
+    order_standby_list.remove(order_id)
+
+    return views.display_ok()
+
+
+def order_standby(order_id):
+    order_standby_list.append(order_id)
+    return views.display_order_standby()
+
+
+@click.command("worker")
+@with_appcontext
+def rq_worker():
+    worker = Worker([queue], connection=redis_conn)
+    worker.work()

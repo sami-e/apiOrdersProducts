@@ -137,3 +137,11 @@ def display_post_redirect(order_id):
 
 def display_ok():
     return Response(status=200)
+
+
+def display_order_standby():
+    return Response(status=202)
+
+
+def display_order_standby_conflict():
+    return Response(status=409)
