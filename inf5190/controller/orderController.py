@@ -1,6 +1,6 @@
 import os
 import json
-from flask import redirect, url_for
+from flask import jsonify
 from playhouse.shortcuts import model_to_dict, dict_to_model
 from redis import Redis
 from rq import Queue, Worker
@@ -173,7 +173,8 @@ class OrderController:
                 "amount_charged": order.total_price + order.shipping_price}
 
             queue.enqueue(pay_order, order_id, payment_data)
-            return redirect(url_for('order_standby', order_id=order_id))
+            order_standby_list.append(order_id)
+            return views.display_order_standby()
         
         else:
             return views.display_error_missing_fields_order()
@@ -181,9 +182,11 @@ class OrderController:
 
 def pay_order(order_id, payment_data):
     try:
+        error = jsonify({})
         payment_response = perform_request(uri="pay", method="POST", data=payment_data)
-    except ApiError as error:
-        return views.display_error_payment_api(error)
+    except ApiError as er:
+        error = er
+        payment_response = perform_request(uri="pay", method="POST", data=payment_data)
 
     credit_card = CreditCard.create(name=payment_response["credit_card"]["name"],
                                     first_digits=payment_response["credit_card"]["first_digits"],
@@ -192,7 +195,8 @@ def pay_order(order_id, payment_data):
                                     expiration_month=payment_response["credit_card"]["expiration_month"])
     transaction = Transaction.create(id=payment_response["transaction"]["id"],
                                      success=payment_response["transaction"]["success"],
-                                     amount_charged=payment_response["transaction"]["amount_charged"])
+                                     amount_charged=payment_response["transaction"]["amount_charged"],
+                                     error=error)
     Order.update(credit_card=credit_card.id,
                  transaction=transaction.id, paid=True).where(Order.id == order_id).execute()
 
@@ -203,11 +207,6 @@ def pay_order(order_id, payment_data):
     order_standby_list.remove(order_id)
 
     return views.display_ok()
-
-
-def order_standby(order_id):
-    order_standby_list.append(order_id)
-    return views.display_order_standby()
 
 
 @click.command("worker")

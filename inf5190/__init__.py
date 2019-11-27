@@ -1,8 +1,13 @@
 from flask import Flask, redirect, url_for, request
-from inf5190.controller.orderController import OrderController
+from inf5190.controller.orderController import OrderController, rq_worker
 from inf5190.controller.productController import ProductController
 from inf5190.model.productModel import Product
-from inf5190.services import init_app, perform_request
+from inf5190.services import perform_request, init_db_command
+
+
+def init_app(app):
+    app.cli.add_command(init_db_command)
+    app.cli.add_command(rq_worker)
 
 
 def create_app(initial_config=None):
@@ -39,9 +44,10 @@ def create_app(initial_config=None):
     @app.route("/order/<int:order_id>", methods=["PUT"])
     def put_order(order_id):
         order = OrderController.update_order(request.json, order_id)
-        if order.status_code == 422:
+        if order.status_code == 200:
+            new_order = OrderController.formatted_order(order_id)
+            return new_order.response, new_order.status, new_order.headers
+        else:
             return order.response, order.status, order.headers
-        new_order = OrderController.formatted_order(order_id)
-        return new_order.response, new_order.status, new_order.headers
 
     return app

@@ -2,7 +2,6 @@ import json
 import os
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
-
 import click
 from flask.cli import with_appcontext
 from inf5190.model.creditCardModel import CreditCard
@@ -47,13 +46,10 @@ def perform_request(uri, method="GET", data=None):
         raise error
 
 
+# Can't put it in model.py because of models import
 @click.command("init-db")
 @with_appcontext
 def init_db_command():
     database = PostgresqlDatabase(DATABASE_NAME, **get_db())
     database.create_tables([Product, CreditCard, ShippingInformation, Transaction, Order, ProductOrder])
     click.echo("Initialized the database.")
-
-
-def init_app(app):
-    app.cli.add_command(init_db_command)

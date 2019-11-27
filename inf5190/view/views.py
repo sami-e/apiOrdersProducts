@@ -126,11 +126,6 @@ def display_error_already_paid():
                     headers={"Content-Type": "application/json; charset=utf-8"})
 
 
-def display_error_payment_api(error):
-    return Response(response=error.content, status=error.code,
-                    headers={"Content-Type": "application/json; charset=utf-8"})
-
-
 def display_post_redirect(order_id):
     return Response(response=order_id, status=302)
 
@@ -140,8 +135,9 @@ def display_ok():
 
 
 def display_order_standby():
-    return Response(status=202)
-
+    return Response(response=jsonify({}), status=202,
+                    headers={"Content-Type": "application/json; charset=utf-8"})
 
 def display_order_standby_conflict():
-    return Response(status=409)
+    return Response(response=jsonify({}), status=409,
+                    headers={"Content-Type": "application/json; charset=utf-8"})
