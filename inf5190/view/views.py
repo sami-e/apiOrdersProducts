@@ -1,4 +1,4 @@
-from flask import Response, jsonify
+from flask import Response, jsonify, make_response
 
 
 def display_products(db_products):
@@ -12,7 +12,7 @@ def display_products(db_products):
                     headers={"Content-Type": "application/json; charset=utf-8"})
 
 
-def display_order(order, product_order_list):
+def get_order_json(order, product_order_list):
     if not order:
         error_not_found = {
             "errors": {
@@ -71,7 +71,12 @@ def display_order(order, product_order_list):
                   "credit_card": credit_card, "shipping_information": shipping_information,
                   "paid": order.paid, "transaction": transaction, "products": product_order_list,
                   "shipping_price": order.shipping_price}
-    return Response(response=jsonify({"order": order_dict}), status=200,
+    
+    return jsonify({"order": order_dict})
+
+
+def display_order(order_json):
+    return Response(response=order_json, status=200,
                     headers={"Content-Type": "application/json; charset=utf-8"})
 
 
@@ -149,9 +154,10 @@ def display_ok():
 
 
 def display_order_standby():
-    return Response(response=jsonify({}), status=202,
+    return Response(response=make_response(""), status=202,
                     headers={"Content-Type": "application/json; charset=utf-8"})
 
+
 def display_order_standby_conflict():
-    return Response(response=jsonify({}), status=409,
+    return Response(response=make_response(""), status=409,
                     headers={"Content-Type": "application/json; charset=utf-8"})

@@ -1,6 +1,5 @@
 from inf5190.model.creditCardModel import CreditCard
 from inf5190.model import models
-from inf5190.model.productModel import Product
 from inf5190.model.shippingInfoModel import ShippingInformation
 from inf5190.model.transactionModel import Transaction
 from peewee import CharField, ForeignKeyField, IntegerField, BooleanField
@@ -14,3 +13,4 @@ class Order(models.BaseModel):
     paid = BooleanField()
     transaction = ForeignKeyField(Transaction, backref="orders", null=True)
     shipping_price = IntegerField()
+    in_progress = BooleanField()

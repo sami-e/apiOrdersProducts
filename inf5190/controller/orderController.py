@@ -1,6 +1,5 @@
 import os
-import json
-from playhouse.shortcuts import model_to_dict, dict_to_model
+import pickle
 from redis import Redis
 from rq import Queue, Worker
 import click
@@ -17,7 +16,6 @@ from inf5190.view import views
 redis_url = os.environ.get('REDIS_URL', 'redis://localhost')
 redis_conn = Redis.from_url(redis_url)
 queue = Queue(connection=redis_conn)
-order_standby_list = []
 
 
 class OrderController:
@@ -26,17 +24,11 @@ class OrderController:
         cle = f"order-{order_id}"
         order_cached = redis_conn.get(cle)
         if order_cached:
-            order = dict_to_model(Order, json.loads(order_cached))
+            order_json = pickle.loads(order_cached)
         else:
-            order = Order.get_or_none(Order.id == order_id)
-
-        product_list = []
-        query = ProductOrder.select().join(Order).where(ProductOrder.order_id == order_id).execute()
-        for product_order in query:
-            product = {"id": product_order.product_id, "quantity": product_order.quantity}
-            product_list.append(product)
+            order_json = get_order_products(order_id)
         
-        return views.display_order(order, product_list)
+        return views.display_order(order_json)
     
     @classmethod
     def create_order(cls, post_data):
@@ -61,7 +53,7 @@ class OrderController:
             else:
                 shipping_price = 25
             
-            order = Order.create(total_price=total_price, shipping_price=shipping_price, paid=False)
+            order = Order.create(total_price=total_price, shipping_price=shipping_price, paid=False, in_progress=False)
             ProductOrder.create(product_id=product_id, order_id=order.id, quantity=quantity)
             
             return views.display_post_redirect(order.id)
@@ -98,7 +90,7 @@ class OrderController:
                 else:
                     return views.display_error_missing_fields_product()
             
-            order = Order.create(total_price=total_price, shipping_price=shipping_price, paid=False)
+            order = Order.create(total_price=total_price, shipping_price=shipping_price, paid=False, in_progress=False)
             for product_item_id in product_list_id:
                 ProductOrder.update(order=order.id).where(ProductOrder.id == product_item_id).execute()
                 
@@ -109,7 +101,8 @@ class OrderController:
     
     @classmethod
     def update_order(cls, post_data, order_id):
-        if order_id not in order_standby_list:
+        order = Order.get_or_none(Order.id == order_id)
+        if not order.in_progress:
             if "credit_card" in post_data:
                 return cls.update_credit_card(post_data, order_id)
             else:
@@ -173,12 +166,22 @@ class OrderController:
                 "amount_charged": order.total_price + order.shipping_price
             }
 
+            Order.update(in_progress=True).where(Order.id == order_id).execute()
             queue.enqueue(pay_order, order_id, payment_data)
-            order_standby_list.append(order_id)
             return views.display_order_standby()
         
         else:
             return views.display_error_missing_fields_order()
+
+
+def get_order_products(order_id):
+    order = Order.get_or_none(Order.id == order_id)
+    product_list = []
+    query = ProductOrder.select().join(Order).where(ProductOrder.order_id == order_id).execute()
+    for product_order in query:
+        product = {"id": product_order.product_id, "quantity": product_order.quantity}
+        product_list.append(product)
+    return views.get_order_json(order, product_list)
 
 
 def pay_order(order_id, payment_data):
@@ -193,20 +196,16 @@ def pay_order(order_id, payment_data):
                                          success=payment_response["transaction"]["success"],
                                          amount_charged=payment_response["transaction"]["amount_charged"])
         Order.update(credit_card=credit_card.id,
-                     transaction=transaction.id, paid=True).where(Order.id == order_id).execute()
-        order = Order.get_or_none(Order.id == order_id)
-        order_cached = json.dumps(model_to_dict(order))
-        redis_conn.set(f"order-{order_id}", order_cached)
+                     transaction=transaction.id, paid=True, in_progress=False).where(Order.id == order_id).execute()
+
+        order_json = get_order_products(order_id)
+        redis_conn.set(f"order-{order_id}", pickle.dumps(order_json))
         
     except ApiError as error:
         transaction = Transaction.create(success=False,
                                          amount_charged=payment_data["amount_charged"],
                                          error_code=error.code, error_name=error.name)
-        Order.update(transaction=transaction.id, paid=False).where(Order.id == order_id).execute()
-
-    order_standby_list.remove(order_id)
-
-    return views.display_ok()
+        Order.update(transaction=transaction.id, paid=False, in_progress=False).where(Order.id == order_id).execute()
 
 
 @click.command("worker")
