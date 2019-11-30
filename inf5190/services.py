@@ -18,7 +18,8 @@ BASE_URL = "https://caissy.dev/shops"
 
 
 class ApiError(Exception):
-    pass
+    code = ""
+    name = ""
 
 
 def perform_request(uri, method="GET", data=None):
@@ -36,13 +37,15 @@ def perform_request(uri, method="GET", data=None):
             else:
                 return None
     except HTTPError as e:
-        code = e.code
+        code = 200
         headers = e.headers
         data = e.read()
         error = ApiError()
         error.code = code
         if headers["content-type"] == "application/json":
             error.content = json.loads(data)
+            error.code = error.content["errors"]["credit_card"]["code"]
+            error.name = error.content["errors"]["credit_card"]["name"]
         raise error
 
 

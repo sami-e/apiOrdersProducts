@@ -1,6 +1,5 @@
 import os
 import json
-from flask import jsonify
 from playhouse.shortcuts import model_to_dict, dict_to_model
 from redis import Redis
 from rq import Queue, Worker
@@ -163,14 +162,16 @@ class OrderController:
             expiration_year = post_data["credit_card"]["expiration_year"]
             cvv = post_data["credit_card"]["cvv"]
             
-            payment_data = {"credit_card": {
-                "name": name,
-                "number": number,
-                "expiration_year": expiration_year,
-                "cvv": cvv,
-                "expiration_month": expiration_month
-            },
-                "amount_charged": order.total_price + order.shipping_price}
+            payment_data = {
+                "credit_card": {
+                    "name": name,
+                    "number": number,
+                    "expiration_year": expiration_year,
+                    "cvv": cvv,
+                    "expiration_month": expiration_month
+                },
+                "amount_charged": order.total_price + order.shipping_price
+            }
 
             queue.enqueue(pay_order, order_id, payment_data)
             order_standby_list.append(order_id)
@@ -182,27 +183,26 @@ class OrderController:
 
 def pay_order(order_id, payment_data):
     try:
-        error = jsonify({})
         payment_response = perform_request(uri="pay", method="POST", data=payment_data)
-    except ApiError as er:
-        error = er
-        payment_response = perform_request(uri="pay", method="POST", data=payment_data)
-
-    credit_card = CreditCard.create(name=payment_response["credit_card"]["name"],
-                                    first_digits=payment_response["credit_card"]["first_digits"],
-                                    last_digits=payment_response["credit_card"]["last_digits"],
-                                    expiration_year=payment_response["credit_card"]["expiration_year"],
-                                    expiration_month=payment_response["credit_card"]["expiration_month"])
-    transaction = Transaction.create(id=payment_response["transaction"]["id"],
-                                     success=payment_response["transaction"]["success"],
-                                     amount_charged=payment_response["transaction"]["amount_charged"],
-                                     error=error)
-    Order.update(credit_card=credit_card.id,
-                 transaction=transaction.id, paid=True).where(Order.id == order_id).execute()
-
-    order = Order.get_or_none(Order.id == order_id)
-    order_cached = json.dumps(model_to_dict(order))
-    redis_conn.set(f"order-{order_id}", order_cached)
+        credit_card = CreditCard.create(name=payment_response["credit_card"]["name"],
+                                        first_digits=payment_response["credit_card"]["first_digits"],
+                                        last_digits=payment_response["credit_card"]["last_digits"],
+                                        expiration_year=payment_response["credit_card"]["expiration_year"],
+                                        expiration_month=payment_response["credit_card"]["expiration_month"])
+        transaction = Transaction.create(code=payment_response["transaction"]["id"],
+                                         success=payment_response["transaction"]["success"],
+                                         amount_charged=payment_response["transaction"]["amount_charged"])
+        Order.update(credit_card=credit_card.id,
+                     transaction=transaction.id, paid=True).where(Order.id == order_id).execute()
+        order = Order.get_or_none(Order.id == order_id)
+        order_cached = json.dumps(model_to_dict(order))
+        redis_conn.set(f"order-{order_id}", order_cached)
+        
+    except ApiError as error:
+        transaction = Transaction.create(success=False,
+                                         amount_charged=payment_data["amount_charged"],
+                                         error_code=error.code, error_name=error.name)
+        Order.update(transaction=transaction.id, paid=False).where(Order.id == order_id).execute()
 
     order_standby_list.remove(order_id)
 

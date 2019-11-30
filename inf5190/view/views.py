@@ -38,7 +38,6 @@ def display_order(order, product_order_list):
     
     if not order.credit_card:
         credit_card = {}
-        transaction = {}
     else:
         credit_card = {
             "name": order.credit_card.name,
@@ -47,10 +46,25 @@ def display_order(order, product_order_list):
             "expiration_year": order.credit_card.expiration_year,
             "expiration_month": order.credit_card.expiration_month
         }
+
+    if not order.transaction:
+        transaction = {}
+    elif not order.credit_card:
+        error = {
+            "code": order.transaction.error_code,
+            "name": order.transaction.error_name
+        }
         transaction = {
-            "id": order.transaction.id,
             "success": order.transaction.success,
-            "amount_charged": order.transaction.amount_charged
+            "amount_charged": order.transaction.amount_charged,
+            "error": error
+        }
+    else:
+        transaction = {
+            "id": order.transaction.code,
+            "success": order.transaction.success,
+            "amount_charged": order.transaction.amount_charged,
+            "error": {}
         }
     
     order_dict = {"id": order.id, "total_price": order.total_price, "email": order.email,
