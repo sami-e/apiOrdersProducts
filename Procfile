@@ -1,0 +1,3 @@
+web: FLASK_DEBUG=True FLASK_APP=inf5190 REDIS_URL=redis://h:p8ede03809046ec5bd7fe3bf623fc0e076491f37d26140008c00bf94183a73fcb@ec2-18-214-19-152.compute-1.amazonaws.com:23929 DB_HOST=localhost DB_USER=user DB_PASSWORD=pass DB_PORT=5432 DB_NAME=inf519 flask init-db
+
+web: FLASK_DEBUG=True FLASK_APP=inf5190 REDIS_URL=redis://h:p8ede03809046ec5bd7fe3bf623fc0e076491f37d26140008c00bf94183a73fcb@ec2-18-214-19-152.compute-1.amazonaws.com:23929 DB_HOST=localhost DB_USER=user DB_PASSWORD=pass DB_PORT=5432 DB_NAME=inf519 flask run
