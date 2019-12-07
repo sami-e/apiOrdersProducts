@@ -7,6 +7,8 @@ SELECT * FROM productorder;
 Redis:
 docker exec -it projet-de-session-ocean_cache_1 /bin/bash
 redis-cli -h localhost -p 6379
+OU
+redis-cli -u redis://h:p8ede03809046ec5bd7fe3bf623fc0e076491f37d26140008c00bf94183a73fcb@ec2-18-214-19-152.compute-1.amazonaws.com:23929
 INFO keyspace (list databases with keys created)
 KEYS * (list all keys)
 
@@ -32,3 +34,8 @@ docker network ls
 docker network create <network-name>
 docker network inspect <network-name>
 docker run --network <network-name> ... OR docker network connect <network-name> <container-name>
+
+
+Heroku:
+heroku run "FLASK_DEBUG=1 FLASK_APP=inf5190 flask init-db"
+heroku run "FLASK_DEBUG=1 FLASK_APP=inf5190 flask worker"
