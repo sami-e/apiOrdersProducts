@@ -14,7 +14,7 @@ services:
     environment:
         POSTGRES_USER: user
         POSTGRES_PASSWORD: pass
-        POSTGRES_DB: inf5190
+        POSTGRES_DB: inf519
   cache:
     image: redis:5-buster
     restart: always
