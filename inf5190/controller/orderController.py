@@ -199,7 +199,7 @@ def pay_order(order_id, payment_data):
                      transaction=transaction.id, paid=True, in_progress=False).where(Order.id == order_id).execute()
 
         order_json = get_order_products(order_id)
-        redis_conn.set(f"order-{order_id}", pickle.dumps(order_json))
+        redis_conn.set(f"order-{order_id}", pickle.dumps(order_json), ex=86400)
         
     except ApiError as error:
         transaction = Transaction.create(success=False,
