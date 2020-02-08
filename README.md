@@ -206,4 +206,5 @@ Content-Type: application/json
 ## WARNINGS
 
 - This API depends on two externals API:  
-https://caissy.dev/shops/products and https://caissy.dev/shops/pay
+https://caissy.dev/shops/products and https://caissy.dev/shops/pay  
+- Tests was done with ```pytest``` and a SQLite DB, so they are not up-to-date (PostgreSQL)  
