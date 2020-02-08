@@ -189,3 +189,21 @@ Content-Type: application/json
 }  
 
 ```  
+
+## Paying an order
+
+- This API was done in educational settings so the only credit card accepted is  
+```
+"number" : "4242 4242 4242 4242",  
+"expiration_year" : 2024,  
+"cvv" : "123",  
+"expiration_month" : 9  
+```    
+- The credit card number 4000 0000 0000 0002 generates a "card-declined" error  
+- Orders are paid using RQ workers. To activate the worker and pay orders, you have to log in to the heroku project with an authorized account in a Terminal window: ```heroku login```  
+- Then run: ```heroku run "FLASK_DEBUG=1 FLASK_APP=inf5190 flask worker"```  
+
+## WARNINGS
+
+- This API depends on two externals API:  
+https://caissy.dev/shops/products and https://caissy.dev/shops/pay
