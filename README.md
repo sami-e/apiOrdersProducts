@@ -3,7 +3,7 @@
 
 ## Description
 
-This is a Flask REST API build for [jpcaissy course on web app](https://github.com/jpcaissy/INF5190) in educational settings (UQÀM-2019).  
+This is a Flask REST API build in educational settings : see [jpcaissy course on web app](https://github.com/jpcaissy/INF5190) (UQÀM-2019).  
 The products are retrieved from a given API (https://caissy.dev/shops/products) and stored in a PostgreSQL DB. RQ (a simple Python library for queueing jobs) and Redis are also used for paying orders (https://caissy.dev/shops/pay) and caching completed orders.
 
 ## API documentation
